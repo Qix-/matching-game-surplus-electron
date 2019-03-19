@@ -1,0 +1,59 @@
+{
+  "name": "memory-game",
+  "version": "0.1.0",
+  "description": "Memory game lel",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --ignore-pattern 'node_modules/*' --ignore-pattern '*.d.ts' ./src/**/*.ts",
+    "build": "gulp",
+    "watch": "gulp watch",
+    "prepare": "npm run build",
+    "start": "electron dist"
+  },
+  "files": [],
+  "keywords": [],
+  "eslintConfig": {
+    "extends": [
+      "xo",
+      "xo-typescript"
+    ],
+    "rules": {
+      "typescript/generic-type-naming": [
+        "error",
+        "^[A-Z][a-zA-Z0-9]*$"
+      ]
+    }
+  },
+  "author": "Josh Junon <josh@junon.me>",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "4.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.2.2",
+    "@babel/preset-env": "7.2.3",
+    "@babel/register": "7.0.0",
+    "@types/node": "10.12.18",
+    "bezier-easing": "2.1.0",
+    "eslint": "5.11.1",
+    "eslint-config-xo": "0.25.1",
+    "eslint-config-xo-typescript": "0.3.0",
+    "eslint-plugin-typescript": "0.14.0",
+    "gulp": "4.0.0",
+    "gulp-sourcemaps": "2.6.4",
+    "gulp-typescript": "5.0.0",
+    "rollup": "1.0.1",
+    "rollup-plugin-babel": "4.2.0",
+    "rollup-plugin-node-resolve": "4.0.0",
+    "rollup-plugin-surplus": "0.5.0",
+    "rollup-plugin-typescript2": "0.18.1",
+    "rollup-stream": "1.24.1",
+    "s-js": "0.4.9",
+    "surplus": "0.5.3",
+    "surplus-mixin-data": "0.5.0",
+    "typescript": "3.2.2",
+    "typescript-eslint-parser": "21.0.2",
+    "vinyl-buffer": "1.0.1",
+    "vinyl-source-stream": "2.0.0"
+  }
+}
