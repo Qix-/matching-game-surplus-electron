@@ -2,15 +2,25 @@ import * as Surplus from 'surplus';
 import S from 's-js';
 
 import {grid} from './util/grid';
+import {clearArray} from './util/clear-array';
 import {parallel} from './util/parallel';
 import {shuffle} from './util/shuffle';
 
 const elements = [];
+const firstFlipped = S.value(null);
+const secondFlipped = S.value(null);
+const frozen = S.value(false);
+const matches = S.value(0);
 
 const SIZE = 750;
-const GRID_SIZE = 5;
+const GRID_SIZE = 4;
 const TILE_SIZE = SIZE / GRID_SIZE;
 const TRANSITION = '0.3s ease-out';
+const TOTAL_MATCHES = (GRID_SIZE * GRID_SIZE) / 2;
+
+if ((GRID_SIZE * GRID_SIZE) % 2 !== 0) {
+	alert('hey dumbass the grid size results in odd numbers');
+}
 
 async function getImage() {
 	return new Promise((resolve, reject) => {
@@ -26,7 +36,7 @@ function makeTile(img) {
 	const flipped = S.value(false);
 
 	const elem = (
-		<div onClick={() => flipped(true)} style={{
+		<div onClick={() => !frozen() && flipped(true)} style={{
 			background: 'url(img/back.png)',
 			backgroundPosition: `${Math.floor(Math.random() * 1000)}px ${Math.floor(Math.random() * 1000)}px`,
 			transform: `perspective(600px) rotateY(${flipped() ? 0 : 180}deg)`,
@@ -41,30 +51,38 @@ function makeTile(img) {
 		</div>
 	);
 
-	return elem;
+	return {elem, flipped};
 }
 
 async function populateTiles() {
-	elements.splice(0, Infinity); // Clear the array
+	clearArray(elements);
 
 	await parallel(GRID_SIZE * GRID_SIZE / 2, async i => {
 		const img = await getImage();
-		elements.push({
-			value: i,
-			elem: makeTile(img),
-			revealed: false
-		});
-
 		const imgClone = img.cloneNode();
-		elements.push({
-			value: i,
-			elem: makeTile(imgClone),
-			revealed: false
-		});
+
+		elements.push(
+			{
+				value: i,
+				...makeTile(img)
+			}, {
+				value: i,
+				...makeTile(imgClone)
+			}
+		);
 	});
 
 	elements.forEach(e => {
 		e.elem.memoryGameData = e;
+
+		S.on(e.flipped, v => {
+			if (!S.sample(e.flipped)) return;
+			if (S.sample(firstFlipped)) {
+				secondFlipped(e);
+			} else {
+				firstFlipped(e);
+			}
+		});
 	});
 
 	shuffle(elements);
@@ -90,10 +108,49 @@ async function createGrid() {
 	return tiles;
 }
 
-const rootElem = () => {
+const rootElem = async () => {
 	const elements = S.data([]);
 
-	createGrid().then(elements);
+	elements(await createGrid());
+
+	S(() => {
+		console.log(
+			'first', firstFlipped() ? firstFlipped().value : 'none',
+			'second', secondFlipped() ? secondFlipped().value : 'none');
+
+		if (firstFlipped() && secondFlipped()) {
+			const matched = firstFlipped().value === secondFlipped().value;
+
+			frozen(!matched);
+
+			if (matched) {
+				firstFlipped(null);
+				secondFlipped(null);
+				matches(matches() + 1);
+			} else {
+				setTimeout(() => {
+					firstFlipped().flipped(false);
+					secondFlipped().flipped(false);
+					firstFlipped(null);
+					secondFlipped(null);
+					frozen(false);
+				}, 500);
+			}
+		}
+	});
+
+	S(() => {
+		if (matches() === TOTAL_MATCHES) {
+			setTimeout(async () => {
+				alert('you win!');
+				matches(0);
+				firstFlipped(null);
+				secondFlipped(null);
+				frozen(false);
+				elements(await createGrid());
+			}, 500);
+		}
+	});
 
 	return (
 		<div style={{
@@ -113,7 +170,7 @@ const rootElem = () => {
 };
 
 export default function memoryGame(root) {
-	S.root(() => {
-		root.appendChild(rootElem());
+	S.root(async () => {
+		root.appendChild(await rootElem());
 	});
 }
